@@ -248,6 +248,7 @@ pub async fn start_ha_tls_manager(
                                         if let Err(e) = tls_config.reload_from_pem(new_cert, new_key).await {
                                             error!("Failed to reload TLS config from PEM: {:?}. Server continues with previous certificates.", e);
                                         }
+                                        patch_webhook_config(&client, &current_cert, &webhook_name).await;
                                     }
                                 }
                                 None => {
@@ -255,6 +256,10 @@ pub async fn start_ha_tls_manager(
                                 }
                             }
                         }
+                    }
+                    Ok(Event::Deleted(_)) => {
+                        warn!("Watch API: TLS Secret deleted by external actor! Triggering instant recovery.");
+                        current_expiry = 0;
                     }
                     Ok(_) => {}
                     Err(e) => {
