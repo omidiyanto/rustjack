@@ -86,7 +86,7 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
             .filter(|s| !s.is_empty())
             .collect();
 
-        let default_env_names = vec!["SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "NODE_EXTRA_CA_CERTS"];
+        let default_env_names = ["SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "NODE_EXTRA_CA_CERTS"];
         let all_env_names: Vec<&str> = default_env_names
             .iter()
             .copied()

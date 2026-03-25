@@ -45,10 +45,10 @@ pub fn generate_certs(svc_name: &str, namespace: &str) -> Result<(Vec<u8>, Vec<u
 }
 
 pub fn get_cert_expiry(cert_pem: &[u8]) -> u64 {
-    if let Ok((_, pem)) = x509_parser::pem::parse_x509_pem(cert_pem) {
-        if let Ok((_, cert)) = x509_parser::parse_x509_certificate(&pem.contents) {
-            return cert.tbs_certificate.validity.not_after.timestamp() as u64;
-        }
+    if let Ok((_, pem)) = x509_parser::pem::parse_x509_pem(cert_pem)
+        && let Ok((_, cert)) = x509_parser::parse_x509_certificate(&pem.contents)
+    {
+        return cert.tbs_certificate.validity.not_after.timestamp() as u64;
     }
     0
 }
@@ -214,8 +214,7 @@ pub async fn start_ha_tls_manager(
     initial_tls: (Vec<u8>, Vec<u8>, u64),
 ) {
     let secrets: Api<Secret> = Api::namespaced(client.clone(), &namespace);
-    let watcher_config =
-        WatcherConfig::default().fields(&format!("metadata.name={}", secret_name));
+    let watcher_config = WatcherConfig::default().fields(&format!("metadata.name={}", secret_name));
     let watcher_stream = watcher(secrets.clone(), watcher_config);
     tokio::pin!(watcher_stream);
 
@@ -272,15 +271,15 @@ pub async fn start_ha_tls_manager(
                 // Re-check Secret after jitter — another replica may have already renewed
                 match secrets.get(&secret_name).await {
                     Ok(secret) => {
-                        if let Some(data) = secret.data {
-                            if let Some((existing_cert, _)) = extract_tls_from_secret(&data) {
-                                let existing_expiry = get_cert_expiry(&existing_cert);
-                                let now_after_jitter = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-                                if existing_expiry > now_after_jitter + renew_threshold {
-                                    info!("Another replica already renewed the TLS Secret. Skipping renewal.");
-                                    current_expiry = existing_expiry;
-                                    continue;
-                                }
+                        if let Some(data) = secret.data
+                            && let Some((existing_cert, _)) = extract_tls_from_secret(&data)
+                        {
+                            let existing_expiry = get_cert_expiry(&existing_cert);
+                            let now_after_jitter = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+                            if existing_expiry > now_after_jitter + renew_threshold {
+                                info!("Another replica already renewed the TLS Secret. Skipping renewal.");
+                                current_expiry = existing_expiry;
+                                continue;
                             }
                         }
                     }
@@ -328,7 +327,7 @@ pub async fn start_ha_tls_manager(
                                 ..Default::default()
                             };
 
-                            if let Ok(_) = secrets.create(&PostParams::default(), &secret).await {
+                            if secrets.create(&PostParams::default(), &secret).await.is_ok() {
                                 info!("Successfully executed Fallback Atomic Create for TLS Secret.");
                                 patch_webhook_config(&client, &new_cert, &webhook_name).await;
                             } else {
