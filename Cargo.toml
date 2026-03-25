@@ -1,6 +1,6 @@
 [package]
 name = "rustjack"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 
 [dependencies]
@@ -19,3 +19,4 @@ tracing-subscriber = "0.3"
 futures = "0.3"
 x509-parser = "0.16.0"
 time = "0.3"
+rand = "0.8"

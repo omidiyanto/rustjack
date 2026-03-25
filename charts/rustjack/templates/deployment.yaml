@@ -35,6 +35,20 @@ spec:
             - name: https
               containerPort: 8443
               protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 15
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -44,5 +58,7 @@ spec:
               value: {{ include "rustjack.fullname" . }}
             - name: WEBHOOK_NAME
               value: {{ include "rustjack.fullname" . }}
+            - name: TLS_SECRET_NAME
+              value: {{ include "rustjack.fullname" . }}-tls
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

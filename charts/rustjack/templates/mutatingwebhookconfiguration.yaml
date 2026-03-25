@@ -18,6 +18,13 @@ webhooks:
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions: ["v1"]
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - {{ .Release.Namespace }}
     objectSelector:
       matchExpressions:
         - key: rustjack.io/inject

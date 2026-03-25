@@ -1,5 +1,8 @@
 replicaCount: 2
 
+nameOverride: ""
+fullnameOverride: ""
+
 image:
   repository: ghcr.io/omidiyanto/rustjack
   pullPolicy: Always
