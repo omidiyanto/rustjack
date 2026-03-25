@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rustjack-cainjector
+description: A Rust-based, blazing fast, stateless, event-driven, and native Mutating Admission Webhook for CA Injection on Kubernetes Pods
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

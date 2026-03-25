@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦀 RustJack - Documentation</title>
+    <style>
+        :root {
+            --primary-color: #E57324; /* Rust Orange */
+            --secondary-color: #326ce5; /* K8s Blue */
+            --text-color: #24292e;
+            --bg-color: #ffffff;
+            --sidebar-bg: #f6f8fa;
+            --border-color: #eaecef;
+            --code-bg: #2d2d2d;
+            --code-text: #f8f8f2;
+        }
+
+        * { box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 40px; /* Offset for smooth scroll */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR NAVIGATION --- */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 30px 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav ul li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar nav ul li a {
+            text-decoration: none;
+            color: #586069;
+            font-size: 0.95em;
+            display: block;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar nav ul li a:hover {
+            background-color: #e1e4e8;
+            color: var(--text-color);
+        }
+
+        .sidebar nav ul li a.active {
+            background-color: #e1e4e8;
+            color: var(--secondary-color);
+            border-left: 3px solid var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            margin-left: 280px; /* Same as sidebar width */
+            padding: 40px 60px;
+            max-width: 950px;
+            width: 100%;
+        }
+
+        section { margin-bottom: 60px; }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 1.5em;
+            color: var(--text-color);
+        }
+
+        h3 { font-size: 1.25em; margin-top: 1.5em; }
+        
+        p { margin-bottom: 1em; color: #333; }
+
+        .badges { margin: 20px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+
+        blockquote {
+            padding: 15px 20px;
+            color: #444;
+            border-left: 4px solid var(--secondary-color);
+            margin: 0 0 20px 0;
+            background-color: #f1f8ff;
+            border-radius: 0 6px 6px 0;
+            font-weight: 500;
+        }
+
+        ul { padding-left: 20px; }
+        li { margin-bottom: 0.5em; }
+
+        /* --- CODE BLOCKS --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.2em;
+            border-radius: 8px;
+            overflow-x: auto;
+            line-height: 1.45;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9em;
+        }
+
+        p code, li code {
+            background-color: rgba(27,31,35,0.05);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            color: #d73a49;
+        }
+
+        /* --- TABLES --- */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1.5em;
+            font-size: 0.95em;
+        }
+        th, td {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+        th {
+            background-color: var(--sidebar-bg);
+            font-weight: 600;
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 850px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+                padding: 20px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>🦀 RustJack</h2>
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#the-pain">The Pain of Custom CAs</a></li>
+                <li><a href="#philosophy">The RustJack Philosophy</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#installation">Installation (Helm)</a></li>
+                <li><a href="#ecosystem">Enterprise CA Distribution</a></li>
+                <li><a href="#usage">Usage Guide (Strict Mode)</a></li>
+                <li><a href="#benchmarks">Performance Benchmarks</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="main-content">
+        
+        <section id="overview">
+            <h1>RustJack</h1>
+            <p style="font-size: 1.2em; font-weight: 600; color: #586069; margin-top: -10px;">
+                Ultimate Certificate Authority Injector for Kubernetes Pods 💉
+            </p>
+            
+            <div class="badges">
+                <img src="https://img.shields.io/badge/Rust-red?style=for-the-badge&logo=rust&logoColor=#E57324" alt="Rust">
+                <img src="https://img.shields.io/badge/kubernetes-blue?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Kubernetes">
+                <img src="https://img.shields.io/badge/docker-green.svg?style=for-the-badge&logo=docker&logoColor=black" alt="Docker">
+                <img src="https://img.shields.io/badge/helm-black?style=for-the-badge&logo=helm&logoColor=white" alt="Helm">
+            </div>
+
+            <blockquote>
+                A blazing fast, zero-allocation, stateless, and cloud-native event-driven Mutating Admission Webhook for CA Injection in Kubernetes.
+            </blockquote>
+
+            <p>RustJack allows off-the-shelf deployments to run in enterprise or air-gapped clusters with custom Certificate Authorities (CAs) <strong>without modifying container images</strong>. Say goodbye to the manual, repetitive process of <code>ADD yourca.crt ...</code> and <code>RUN update-ca-certificates</code> in your Dockerfiles.</p>
+        </section>
+
+        <section id="the-pain">
+            <h2>🎯 The Pain of Custom CAs (Why You Need RustJack)</h2>
+            <p>If you work in an enterprise, air-gapped, or highly regulated environment, you already know the nightmare of Deep Packet Inspection (DPI), SSL interception, and custom root authorities. Before RustJack, SRE/Platform/DevOps Engineers had to choose their poison:</p>
+            <ul>
+                <li>🚫 <strong>The Dockerfile Anti-Pattern (Image Bloat):</strong> Forking and rebuilding every upstream Open Source image (like Alpine, Node, or Python) just to inject <code>corporate-ca.crt</code>. It breaks your software supply chain and slows down CI/CD pipelines.</li>
+                <li>🚫 <strong>The YAML Manifest Hell:</strong> Manually hardcoding <code>volumes</code>, <code>volumeMounts</code>, and environment variables into hundreds of Deployments. A single typo brings down the application with <code>x509: unknown authority</code>.</li>
+                <li>🚫 <strong>The InitContainer Tax (Boilerplate Burden):</strong> Forcing developers to inject <code>initContainers</code> or sidecars into every Pod just to fetch a certificate. It severely bloats YAML and slows down Pod startup times.</li>
+                <li>🚫 <strong>Bloated Legacy Webhooks:</strong> Using traditional webhooks that consume 50MB+ RAM at idle, introduce API Server latency, and rely on a fragile maze of third-party cert-managers just to keep their own TLS alive.</li>
+            </ul>
+            <p><strong>RustJack is the ultimate cure.</strong> It decouples the certificate trust layer from your application layer cleanly, instantly, and with zero operational overhead.</p>
+        </section>
+
+        <section id="philosophy">
+            <h2>🏛️ The RustJack Philosophy</h2>
+            <p><strong>RustJack is not just another Kubernetes webhook</strong>, it is an architectural statement. Built with extreme Site Reliability Engineering (SRE) principles:</p>
+            <ul>
+                <li><strong>Zero-Allocation Pipeline:</strong> Processes JSON patches using pointer references (<code>&str</code>). Resulting in a flat <strong>1 MiB RAM</strong> usage and <strong>&lt; 1ms latency</strong>.</li>
+                <li><strong>True Stateless High Availability (HA):</strong> Powered by the Kubernetes Watch API. Multiple replicas sync their TLS states entirely in-memory without <em>Split-Brain</em>.</li>
+                <li><strong>Zero Trust "Short-Lived" TLS:</strong> Discards external cert-managers for its internal webhook. Generates its own keys in-memory with a <strong>12-hour lifespan</strong>, auto-renewing at the 9-hour mark.</li>
+                <li><strong>Distroless & Immutable:</strong> Packaged in Google's <code>cc-debian12:nonroot</code> Distroless image. No shell, no root access.</li>
+                <li><strong>Idempotent Self-Healing:</strong> Chaos-tested against node failures and aggressive secret deletions. Gracefully handles <code>SIGTERM</code>.</li>
+            </ul>
+        </section>
+
+        <section id="how-it-works">
+            <h2>✨ How It Works</h2>
+            <p>When a Pod with the <code>rustjack.io/inject: "true"</code> label is submitted, RustJack intercepts the request and instantly injects the required CA trust chain before the Pod is scheduled:</p>
+            <ol>
+                <li><strong>Injects a Secret Volume:</strong> Mounts your custom CA bundle into all containers (including <code>initContainers</code>).</li>
+                <li><strong>Exports Environment Variables:</strong> Automatically configures standard trust paths (<code>SSL_CERT_FILE</code>, <code>REQUESTS_CA_BUNDLE</code>, <code>NODE_EXTRA_CA_CERTS</code>, etc.) pointing to the injected CA file.</li>
+            </ol>
+            <p>Your applications instantly trust the corporate CA—zero code changes required.</p>
+        </section>
+
+        <section id="installation">
+            <h2>🚀 Installation (Helm)</h2>
+            <p>This page serves as the official Helm chart repository. Install RustJack directly into your cluster:</p>
+<pre><code>helm repo add rustjack https://omidiyanto.github.io/rustjack/
+helm repo update
+
+helm upgrade --install rustjack-cainjector rustjack/rustjack-cainjector \
+  --namespace cert-manager \
+  --create-namespace \
+  --wait</code></pre>
+        </section>
+
+        <section id="ecosystem">
+            <h2>🔗 Enterprise Ecosystem: CA Distribution (Optional)</h2>
+            <p><strong>Architectural Note:</strong> RustJack is <strong>100% independent</strong>. If you manually create a standard Kubernetes <code>Opaque</code> Secret containing your <code>ca.crt</code>, RustJack will happily inject it. However, for true enterprise automation across dozens of namespaces, we highly recommend pairing RustJack with <a href="https://cert-manager.io/docs/trust/trust-manager/" target="_blank">trust-manager</a>.</p>
+            
+            <p>1. Install the cert-manager & trust-manager stack:</p>
+<pre><code>helm repo add jetstack https://charts.jetstack.io --force-update
+
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace --set crds.enabled=true
+
+helm upgrade trust-manager jetstack/trust-manager \
+  --install --namespace cert-manager --wait \
+  --set secretTargets.enabled=true --set secretTargets.authorizedSecretsAll=true</code></pre>
+
+            <p>2. Define your corporate CA once using a <code>Bundle</code>:</p>
+<pre><code>apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: my-root-ca # This name will be referenced in your pod's annotation
+spec:
+  sources:
+    - useDefaultCAs: true
+    - inLine: |
+        -----BEGIN CERTIFICATE-----
+        MIIDNTC..................
+        -----END CERTIFICATE-----
+  target:
+    secret:
+      key: "ca.crt"</code></pre>
+            <p><code>trust-manager</code> replicates this CA into every namespace, and <strong>RustJack</strong> natively mounts these replicated Secrets into your Pods.</p>
+        </section>
+
+        <section id="usage">
+            <h2>💡 Usage Guide (Strict Mode)</h2>
+            <p>RustJack operates in <strong>Strict Mode</strong>. You <strong>MUST</strong> provide both the specific trigger label and the configuration annotation to prevent unnecessary webhook invocations.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scope</th>
+                        <th>Key</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Label</strong></td>
+                        <td><code>rustjack.io/inject: "true"</code></td>
+                        <td><strong>[REQUIRED]</strong> Instructs the Kube-apiserver to route this Pod to the webhook.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Annotation</strong></td>
+                        <td><code>rustjack.io/ca-secret</code></td>
+                        <td><strong>[REQUIRED]</strong> The exact name of the Kubernetes Secret containing your <code>ca.crt</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Annotation</strong></td>
+                        <td><code>rustjack.io/mount-path</code></td>
+                        <td><em>[Optional]</em> Directory where the CA will be mounted. <strong>Default:</strong> <code>/ssl</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Annotation</strong></td>
+                        <td><code>rustjack.io/extra-envs</code></td>
+                        <td><em>[Optional]</em> Comma-separated list of additional env vars to inject.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Example: Zero-Touch Deployment</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-secure-app
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-secure-app
+  template:
+    metadata:
+      labels:
+        app: my-secure-app
+        # 👇 1. THE TRIGGER LABEL 👇
+        rustjack.io/inject: "true"
+      annotations:
+        # 👇 2. DEFINE CA SECRET NAME TO BE INJECTED 👇
+        rustjack.io/ca-secret: "my-root-ca"
+    spec:
+      containers:
+      - name: main-app
+        image: alpine:latest
+        command: ["sleep", "infinity"]</code></pre>
+
+            <h3>Verification</h3>
+<pre><code># Check the RustJack logs
+kubectl logs -l app.kubernetes.io/name=rustjack-cainjector -n cert-manager
+
+# Verify the application Pod
+kubectl exec -it deploy/my-secure-app -- env | grep "SSL\|CUSTOM"
+kubectl exec -it deploy/my-secure-app -- ls -la /ssl/ca.crt</code></pre>
+        </section>
+
+        <section id="benchmarks">
+            <h2>📊 Performance Benchmarks</h2>
+            <p>Tested on a production RKE2 cluster with 30 concurrent Pod scaling operations:</p>
+            <ul>
+                <li><strong>Memory Footprint:</strong> <code>~ 1.0 MiB</code> (Flat line, immune to garbage collection spikes)</li>
+                <li><strong>CPU Usage:</strong> <code>~ 1m</code> (0.001 cores at peak concurrent load)</li>
+                <li><strong>API Latency:</strong> <code>&lt; 1 ms</code></li>
+                <li><strong>High Availability:</strong> Active-Active Topology Spread via Kubernetes Watch API</li>
+            </ul>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sections = document.querySelectorAll("section");
+            const navLinks = document.querySelectorAll(".sidebar nav ul li a");
+
+            const observerOptions = {
+                root: null,
+                rootMargin: "-20% 0px -60% 0px", // Adjust to trigger when section is well within view
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Remove active class from all links
+                        navLinks.forEach(link => link.classList.remove("active"));
+                        // Add active class to corresponding link
+                        const id = entry.target.getAttribute("id");
+                        const activeLink = document.querySelector(`.sidebar nav ul li a[href="#${id}"]`);
+                        if (activeLink) activeLink.classList.add("active");
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+</html>

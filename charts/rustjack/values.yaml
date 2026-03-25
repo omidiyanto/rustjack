@@ -1,0 +1,26 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/omidiyanto/rustjack
+  pullPolicy: Always
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 443
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 15Mi
+  limits:
+    cpu: 50m
+    memory: 30Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
