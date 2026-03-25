@@ -1,5 +1,5 @@
 [package]
-name = "rustjack-k8s-ca-injector"
+name = "rustjack"
 version = "1.0.0"
 edition = "2021"
 

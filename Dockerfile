@@ -6,7 +6,7 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc-debian12:nonroot
 WORKDIR /app
-COPY --from=builder --chown=nonroot:nonroot /app/target/release/rustjack-k8s-ca-injector /app/rustjack
+COPY --from=builder --chown=nonroot:nonroot /app/target/release/rustjack /app/rustjack
 USER 65532:65532
 EXPOSE 8443
 ENTRYPOINT ["/app/rustjack"]
