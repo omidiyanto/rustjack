@@ -1,21 +1,24 @@
 use axum::Json;
-use base64::{engine::general_purpose::STANDARD as base64_std, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD as base64_std};
 use k8s_openapi::api::core::v1::{Container, Pod};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tracing::{debug, info, warn};
 
 pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
     let req = match body.get("request") {
         Some(r) => r,
-        None => return Json(json!({"response": {"allowed": true}}))
+        None => return Json(json!({"response": {"allowed": true}})),
     };
 
     let uid = req.get("uid").and_then(|u| u.as_str()).unwrap_or("");
-    let namespace = req.get("namespace").and_then(|n| n.as_str()).unwrap_or("unknown-ns");
+    let namespace = req
+        .get("namespace")
+        .and_then(|n| n.as_str())
+        .unwrap_or("unknown-ns");
 
     let pod: Pod = match serde_json::from_value(req.get("object").unwrap_or(&json!(null)).clone()) {
         Ok(p) => p,
-        Err(_) => return Json(json!({"response": {"uid": uid, "allowed": true}}))
+        Err(_) => return Json(json!({"response": {"uid": uid, "allowed": true}})),
     };
 
     let has_annotations = pod.metadata.annotations.is_some();
@@ -24,7 +27,7 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
         Some(name) => name,
         None => {
             debug!("Skipping: No rustjack.io/ca-secret annotation found");
-            return Json(json!({"response": {"uid": uid, "allowed": true}}))
+            return Json(json!({"response": {"uid": uid, "allowed": true}}));
         }
     };
 
@@ -33,17 +36,29 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
 
     match (name, gen_name) {
         (Some(n), _) => {
-            info!("Injecting CA from Secret '{}' into {}/{}", secret_name, namespace, n);
+            info!(
+                "Injecting CA from Secret '{}' into {}/{}",
+                secret_name, namespace, n
+            );
         }
         (None, Some(g)) => {
-            info!("Injecting CA from Secret '{}' into {}/{}<generated>", secret_name, namespace, g);
+            info!(
+                "Injecting CA from Secret '{}' into {}/{}<generated>",
+                secret_name, namespace, g
+            );
         }
         (None, None) => {
-            info!("Injecting CA from Secret '{}' into {}/unknown-pod", secret_name, namespace);
+            info!(
+                "Injecting CA from Secret '{}' into {}/unknown-pod",
+                secret_name, namespace
+            );
         }
     }
 
-    let mount_path = annotations.get("rustjack.io/mount-path").map(|s| s.as_str()).unwrap_or("/ssl");
+    let mount_path = annotations
+        .get("rustjack.io/mount-path")
+        .map(|s| s.as_str())
+        .unwrap_or("/ssl");
     let ca_file = format!("{}/ca.crt", mount_path);
     let mut patch = Vec::new();
     let mut overwritten_envs: Vec<String> = Vec::new();
@@ -62,11 +77,19 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
             }
         }));
 
-        let extra_envs_str = annotations.get("rustjack.io/extra-envs").map(|s| s.as_str()).unwrap_or("");
-        let extra_envs: Vec<&str> = extra_envs_str.split(',').filter(|s| !s.is_empty()).collect();
+        let extra_envs_str = annotations
+            .get("rustjack.io/extra-envs")
+            .map(|s| s.as_str())
+            .unwrap_or("");
+        let extra_envs: Vec<&str> = extra_envs_str
+            .split(',')
+            .filter(|s| !s.is_empty())
+            .collect();
 
         let default_env_names = vec!["SSL_CERT_FILE", "REQUESTS_CA_BUNDLE", "NODE_EXTRA_CA_CERTS"];
-        let all_env_names: Vec<&str> = default_env_names.iter().copied()
+        let all_env_names: Vec<&str> = default_env_names
+            .iter()
+            .copied()
             .chain(extra_envs.iter().copied())
             .collect();
 
@@ -126,7 +149,10 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
     // Add audit annotation if any env vars were overwritten
     if !overwritten_envs.is_empty() {
         let annotation_value = overwritten_envs.join(",");
-        info!("Adding audit annotation for overwritten env vars: {}", annotation_value);
+        info!(
+            "Adding audit annotation for overwritten env vars: {}",
+            annotation_value
+        );
 
         if !has_annotations {
             patch.push(json!({"op": "add", "path": "/metadata/annotations", "value": {}}));

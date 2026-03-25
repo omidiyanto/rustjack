@@ -1,11 +1,14 @@
 use axum_server::tls_rustls::RustlsConfig;
-use base64::{engine::general_purpose::STANDARD as base64_std, Engine as _};
+use base64::{Engine as _, engine::general_purpose::STANDARD as base64_std};
 use futures::StreamExt;
+use k8s_openapi::ByteString;
 use k8s_openapi::api::admissionregistration::v1::MutatingWebhookConfiguration;
 use k8s_openapi::api::core::v1::Secret;
-use k8s_openapi::ByteString;
-use kube::{api::{Api, Patch, PatchParams, PostParams}, Client};
-use kube::runtime::watcher::{watcher, Config as WatcherConfig, Event};
+use kube::runtime::watcher::{Config as WatcherConfig, Event, watcher};
+use kube::{
+    Client,
+    api::{Api, Patch, PatchParams, PostParams},
+};
 use rand::Rng;
 use rcgen::{CertificateParams, DistinguishedName, DnType, SanType};
 use std::collections::BTreeMap;
@@ -31,7 +34,8 @@ pub fn generate_certs(svc_name: &str, namespace: &str) -> Result<(Vec<u8>, Vec<u
     let cert = rcgen::Certificate::from_params(params)
         .map_err(|e| format!("Failed to create certificate params: {}", e))?;
 
-    let cert_pem = cert.serialize_pem()
+    let cert_pem = cert
+        .serialize_pem()
         .map_err(|e| format!("Failed to serialize certificate PEM: {}", e))?
         .into_bytes();
 
@@ -69,14 +73,23 @@ pub async fn patch_webhook_config(client: &Client, ca_pem: &[u8], webhook_name: 
     });
 
     let patch = Patch::Strategic(patch_json);
-    if let Err(e) = api.patch(webhook_name, &PatchParams::default(), &patch).await {
+    if let Err(e) = api
+        .patch(webhook_name, &PatchParams::default(), &patch)
+        .await
+    {
         error!("Failed to update Webhook caBundle: {}", e);
     } else {
         info!("Successfully updated MutatingWebhookConfiguration caBundle");
     }
 }
 
-pub async fn initialize_tls(client: &Client, svc_name: &str, namespace: &str, webhook_name: &str, secret_name: &str) -> (Vec<u8>, Vec<u8>, u64) {
+pub async fn initialize_tls(
+    client: &Client,
+    svc_name: &str,
+    namespace: &str,
+    webhook_name: &str,
+    secret_name: &str,
+) -> (Vec<u8>, Vec<u8>, u64) {
     let secrets: Api<Secret> = Api::namespaced(client.clone(), namespace);
 
     match secrets.get(secret_name).await {
@@ -85,18 +98,40 @@ pub async fn initialize_tls(client: &Client, svc_name: &str, namespace: &str, we
             match extract_tls_from_secret(&data) {
                 Some((cert, key)) => {
                     let expiry = get_cert_expiry(&cert);
-                    info!("Loaded existing TLS from Secret. Expiry timestamp: {}", expiry);
+                    info!(
+                        "Loaded existing TLS from Secret. Expiry timestamp: {}",
+                        expiry
+                    );
                     patch_webhook_config(client, &cert, webhook_name).await;
                     (cert, key, expiry)
                 }
                 None => {
-                    warn!("Secret '{}' exists but missing tls.crt/tls.key fields. Regenerating...", secret_name);
-                    generate_and_store_secret(client, &secrets, svc_name, namespace, webhook_name, secret_name).await
+                    warn!(
+                        "Secret '{}' exists but missing tls.crt/tls.key fields. Regenerating...",
+                        secret_name
+                    );
+                    generate_and_store_secret(
+                        client,
+                        &secrets,
+                        svc_name,
+                        namespace,
+                        webhook_name,
+                        secret_name,
+                    )
+                    .await
                 }
             }
         }
         Err(_) => {
-            generate_and_store_secret(client, &secrets, svc_name, namespace, webhook_name, secret_name).await
+            generate_and_store_secret(
+                client,
+                &secrets,
+                svc_name,
+                namespace,
+                webhook_name,
+                secret_name,
+            )
+            .await
         }
     }
 }
@@ -148,14 +183,19 @@ async fn generate_and_store_secret(
                             (cert, key, expiry)
                         }
                         None => {
-                            error!("Winner's Secret is also missing tls.crt/tls.key. Using locally generated certs.");
+                            error!(
+                                "Winner's Secret is also missing tls.crt/tls.key. Using locally generated certs."
+                            );
                             let expiry = get_cert_expiry(&cert);
                             (cert, key, expiry)
                         }
                     }
                 }
                 Err(e) => {
-                    error!("Failed to read Secret after losing create race: {}. Using locally generated certs.", e);
+                    error!(
+                        "Failed to read Secret after losing create race: {}. Using locally generated certs.",
+                        e
+                    );
                     let expiry = get_cert_expiry(&cert);
                     (cert, key, expiry)
                 }
@@ -174,15 +214,19 @@ pub async fn start_ha_tls_manager(
     initial_tls: (Vec<u8>, Vec<u8>, u64),
 ) {
     let secrets: Api<Secret> = Api::namespaced(client.clone(), &namespace);
-    let watcher_config = WatcherConfig::default().fields(&format!("metadata.name={}", secret_name));
+    let watcher_config =
+        WatcherConfig::default().fields(&format!("metadata.name={}", secret_name));
     let watcher_stream = watcher(secrets.clone(), watcher_config);
     tokio::pin!(watcher_stream);
 
     let (mut current_cert, mut _current_key, mut current_expiry) = initial_tls;
 
     loop {
-        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-        let renew_threshold = 600; 
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let renew_threshold = 600;
 
         let time_to_sleep = if current_expiry > now + renew_threshold {
             current_expiry - now - renew_threshold
@@ -270,7 +314,7 @@ pub async fn start_ha_tls_manager(
                         let err_str = e.to_string();
                         if err_str.contains("NotFound") || err_str.contains("404") {
                             warn!("Secret '{}' is missing! Falling back to recreate it.", secret_name);
-                            
+
                             let mut data = BTreeMap::new();
                             data.insert("tls.crt".to_string(), ByteString(new_cert.clone()));
                             data.insert("tls.key".to_string(), ByteString(new_key.clone()));

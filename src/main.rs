@@ -1,4 +1,7 @@
-use axum::{routing::{get, post}, Router};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use std::net::SocketAddr;
 use tracing::info;
 
@@ -43,16 +46,21 @@ async fn main() {
 
     let svc_name = std::env::var("SERVICE_NAME").unwrap_or_else(|_| "rustjack".to_string());
     let namespace = std::env::var("POD_NAMESPACE").unwrap_or_else(|_| "cert-manager".to_string());
-    let webhook_name = std::env::var("WEBHOOK_NAME").unwrap_or_else(|_| "rustjack-webhook".to_string());
-    let secret_name = std::env::var("TLS_SECRET_NAME").unwrap_or_else(|_| format!("{}-tls", svc_name));
+    let webhook_name =
+        std::env::var("WEBHOOK_NAME").unwrap_or_else(|_| "rustjack-webhook".to_string());
+    let secret_name =
+        std::env::var("TLS_SECRET_NAME").unwrap_or_else(|_| format!("{}-tls", svc_name));
 
-    let client = kube::Client::try_default().await.expect("Failed to create K8s client");
+    let client = kube::Client::try_default()
+        .await
+        .expect("Failed to create K8s client");
 
-    let initial_tls = tls::initialize_tls(&client, &svc_name, &namespace, &webhook_name, &secret_name).await;
+    let initial_tls =
+        tls::initialize_tls(&client, &svc_name, &namespace, &webhook_name, &secret_name).await;
 
     let config = axum_server::tls_rustls::RustlsConfig::from_pem(
         initial_tls.0.clone(),
-        initial_tls.1.clone()
+        initial_tls.1.clone(),
     )
     .await
     .expect("Failed to load Rustls configuration");
@@ -61,7 +69,16 @@ async fn main() {
     let client_clone = client.clone();
 
     tokio::spawn(async move {
-        tls::start_ha_tls_manager(client_clone, tls_config_handle, namespace, svc_name, webhook_name, secret_name, initial_tls).await;
+        tls::start_ha_tls_manager(
+            client_clone,
+            tls_config_handle,
+            namespace,
+            svc_name,
+            webhook_name,
+            secret_name,
+            initial_tls,
+        )
+        .await;
     });
 
     let app = Router::new()
