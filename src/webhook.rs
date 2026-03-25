@@ -21,7 +21,6 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
         Err(_) => return Json(json!({"response": {"uid": uid, "allowed": true}})),
     };
 
-    let has_annotations = pod.metadata.annotations.is_some();
     let annotations = pod.metadata.annotations.unwrap_or_default();
     let secret_name = match annotations.get("rustjack.io/ca-secret") {
         Some(name) => name,
@@ -154,9 +153,6 @@ pub async fn mutate_handler(Json(body): Json<Value>) -> Json<Value> {
             annotation_value
         );
 
-        if !has_annotations {
-            patch.push(json!({"op": "add", "path": "/metadata/annotations", "value": {}}));
-        }
         patch.push(json!({
             "op": "add",
             "path": "/metadata/annotations/rustjack.io~1overwritten-envs",
