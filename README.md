@@ -1,8 +1,8 @@
 # 🦀 RustJack - Ultimate Certificate Authority Injector for Kubernetes Pods 💉
 
 <div align="center">
-    <a href="[https://sonarcloud.io/summary/new_code?id=omidiyanto_rustjack](https://sonarcloud.io/summary/new_code?id=omidiyanto_rustjack)">
-        <img src="[https://sonarcloud.io/api/project_badges/measure?project=omidiyanto_rustjack&metric=alert_status](https://sonarcloud.io/api/project_badges/measure?project=omidiyanto_rustjack&metric=alert_status)" alt="Quality Gate Status">
+    <a href="https://sonarcloud.io/summary/new_code?id=omidiyanto_rustjack">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=omidiyanto_rustjack&metric=alert_status" alt="Quality Gate Status">
     </a>
     <br><br>
     <img src="https://img.shields.io/badge/Rust-red?style=for-the-badge&logo=rust&logoColor=#E57324">
