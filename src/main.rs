@@ -86,7 +86,7 @@ async fn main() {
         .route("/healthz", get(healthz));
     let addr = SocketAddr::from(([0, 0, 0, 0], 8443));
 
-    info!("RustJack v1.1.0 is ready and listening on {}", addr);
+    info!("RustJack v1.1.1 is ready and listening on {}", addr);
 
     let handle = axum_server::Handle::new();
     let shutdown_handle = handle.clone();
