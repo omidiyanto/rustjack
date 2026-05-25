@@ -16,7 +16,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tracing::{error, info, warn};
 
 pub fn generate_certs(svc_name: &str, namespace: &str) -> Result<(Vec<u8>, Vec<u8>), String> {
-    info!("Generating new 15-minute TLS certificates...");
+    info!("Generating new 60-minute TLS certificates...");
     let mut params = CertificateParams::default();
     let mut dn = DistinguishedName::new();
     dn.push(DnType::CommonName, svc_name);
@@ -29,7 +29,7 @@ pub fn generate_certs(svc_name: &str, namespace: &str) -> Result<(Vec<u8>, Vec<u
 
     let now = time::OffsetDateTime::now_utc();
     params.not_before = now;
-    params.not_after = now + time::Duration::minutes(15);
+    params.not_after = now + time::Duration::minutes(60);
 
     let cert = rcgen::Certificate::from_params(params)
         .map_err(|e| format!("Failed to create certificate params: {}", e))?;
